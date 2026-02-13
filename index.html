@@ -2,75 +2,99 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Live Clima & Ofertas - 27 Capitais</title>
+    <title>Live Clima e Notícias - Capitais</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #000; color: white; font-family: 'Segoe UI', Arial, sans-serif; overflow: hidden; }
-
-        /* LETREIRO DE OFERTAS */
-        .marquee-container {
-            position: fixed; top: 0; width: 100%; background: #ffce00;
-            color: #000; padding: 10px 0; font-weight: bold; font-size: 20px;
-            z-index: 100; border-bottom: 3px solid #f39c12;
-        }
-        .marquee-text {
-            display: inline-block; white-space: nowrap;
-            animation: marquee 20s linear infinite;
-        }
-        @keyframes marquee {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
-        }
 
         /* FUNDO DINÂMICO */
         #bg {
             position: fixed; width: 100%; height: 100%;
             background-size: cover; background-position: center;
             z-index: -1; transition: background 2s ease-in-out;
-            filter: brightness(0.4);
+            filter: brightness(0.3);
         }
 
-        /* PAINEL DE INFORMAÇÕES */
-        .container {
-            position: absolute; bottom: 50px; left: 50px;
-            background: rgba(0,0,0,0.8); padding: 40px; border-radius: 30px;
-            border-left: 10px solid #ffce00; min-width: 450px;
+        /* CONTAINER PRINCIPAL */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            height: 100vh;
+            padding: 50px;
+        }
+
+        /* PAINEL DE CLIMA */
+        .clima-panel {
+            background: rgba(0,0,0,0.8);
+            padding: 30px;
+            border-radius: 20px 20px 0 0;
+            border-left: 10px solid #ffce00;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             backdrop-filter: blur(10px);
         }
-        h1 { font-size: 50px; margin-bottom: 5px; text-transform: uppercase; }
-        .estado { font-size: 22px; color: #ffce00; margin-bottom: 20px; display: block; }
-        .clima-row { display: flex; align-items: center; }
-        .temp { font-size: 100px; font-weight: bold; margin-right: 20px; }
-        #icone { width: 120px; }
+
+        .cidade-info h1 { font-size: 50px; text-transform: uppercase; }
+        .temp-val { font-size: 80px; font-weight: bold; color: #ffce00; }
+
+        /* PAINEL DE NOTÍCIAS */
+        .news-panel {
+            background: rgba(255, 206, 0, 0.9);
+            color: #000;
+            padding: 20px;
+            border-radius: 0 0 20px 20px;
+            font-size: 24px;
+            font-weight: bold;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+        }
+
+        .news-label {
+            background: #000;
+            color: #fff;
+            padding: 5px 15px;
+            border-radius: 5px;
+            margin-right: 15px;
+            font-size: 18px;
+            white-space: nowrap;
+        }
+
+        /* BARRA DE PROGRESSO (60s) */
+        .progress-bar {
+            position: fixed; bottom: 0; left: 0; height: 8px;
+            background: #ffce00; width: 0%;
+        }
     </style>
 </head>
 <body>
 
-    <div class="marquee-container">
-        <div class="marquee-text">
-            ⚡ OFERTAS AMAZON: Smartphone Samsung Galaxy S24 Ultra com desconto! &nbsp;&nbsp;&nbsp;&nbsp; 
-            🎧 Fone Bluetooth JBL em Promoção &nbsp;&nbsp;&nbsp;&nbsp; 
-            💻 Notebook Gamer Acer Nitro 5 &nbsp;&nbsp;&nbsp;&nbsp; 
-            🔥 ACESSE O LINK NA BIO E APROVEITE!
-        </div>
-    </div>
-
     <div id="bg"></div>
 
-    <div class="container">
-        <span id="regiao" class="estado">Iniciando...</span>
-        <h1 id="cidade">Brasília</h1>
-        <div class="clima-row">
-            <span class="temp" id="temp">--°C</span>
-            <img id="icone" src="" alt="">
+    <div class="main-content">
+        <div class="clima-panel">
+            <div class="cidade-info">
+                <p id="estado" style="color:#ffce00; font-size: 20px;"></p>
+                <h1 id="cidade">Carregando...</h1>
+            </div>
+            <div style="display:flex; align-items:center;">
+                <span class="temp-val" id="temp">--°C</span>
+                <img id="icone" src="" alt="">
+            </div>
+        </div>
+        <div class="news-panel">
+            <span class="news-label">ÚLTIMAS NOTÍCIAS</span>
+            <span id="noticia">Buscando informações locais...</span>
         </div>
     </div>
+
+    <div class="progress-bar" id="progress"></div>
 
     <script>
         const API_KEY = '630c9e2bcd6b9a605058220d40683967'; 
-
-        // ESTRUTURA DE DADOS: 27 Capitais + Campo para sua Foto
-        // Basta substituir o link entre as aspas em 'foto' pelo link da sua preferência
+        
         const capitais = [
             {n: "Rio Branco", s: "Acre", foto: "https://upload.wikimedia.org/wikipedia/commons/4/41/Centro_de_Cruzeiro_do_Sul-AC.jpg"},
             {n: "Maceió", s: "Alagoas", foto: "https://upload.wikimedia.org/wikipedia/commons/2/2a/Macei%C3%B3_Alagoas_Brasil.jpg"},
@@ -101,31 +125,60 @@
             {n: "Palmas", s: "Tocantins", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Praia_de_Palmas_%2820330051450%29.jpg/1280px-Praia_de_Palmas_%2820330051450%29.jpg?20170430050545"}
         ];
 
+
         let i = 0;
 
-        async function updateWeather() {
+        async function updatePage() {
             const cap = capitais[i];
             
-            // Troca a Foto de Fundo
+            // 1. Atualiza Foto
             document.getElementById('bg').style.backgroundImage = `url('${cap.foto}')`;
+            
+            // 2. Barra de Progresso (60s)
+            const pb = document.getElementById('progress');
+            pb.style.transition = 'none';
+            pb.style.width = '0%';
+            setTimeout(() => {
+                pb.style.transition = 'width 60s linear';
+                pb.style.width = '100%';
+            }, 100);
 
+            // 3. Busca Clima
             try {
-                const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${cap.n},BR&units=metric&lang=pt_br&appid=${API_KEY}`);
-                const data = await res.json();
-
-                if(data.cod === 200) {
+                const resClima = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${cap.n},BR&units=metric&lang=pt_br&appid=${API_KEY}`);
+                const dataClima = await resClima.json();
+                if(dataClima.cod === 200) {
                     document.getElementById('cidade').innerText = cap.n;
-                    document.getElementById('regiao').innerText = cap.s;
-                    document.getElementById('temp').innerText = Math.round(data.main.temp) + '°C';
-                    document.getElementById('icone').src = `https://openweathermap.org/img/wn/${data.weather[0].icon}@4x.png`;
+                    document.getElementById('estado').innerText = cap.s;
+                    document.getElementById('temp').innerText = Math.round(dataClima.main.temp) + '°C';
+                    document.getElementById('icone').src = `https://openweathermap.org/img/wn/${dataClima.weather[0].icon}@4x.png`;
                 }
-            } catch (e) { console.log("Erro na conexão"); }
+            } catch (e) { console.log("Erro Clima"); }
+
+            // 4. Busca Notícias (Usando RSS2JSON para converter o Google News em JSON legível)
+            try {
+                const query = `noticias+${cap.n.replace(" ", "+")}`;
+                const rssUrl = `https://news.google.com/rss/search?q=${query}&hl=pt-BR&gl=BR&ceid=BR:pt-419`;
+                const resNews = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`);
+                const dataNews = await resNews.json();
+                
+                if(dataNews.status === 'ok' && dataNews.items.length > 0) {
+                    // Pega o título da primeira notícia e limpa o nome do site no final
+                    let noticiaFull = dataNews.items[0].title;
+                    let noticiaLimpa = noticiaFull.split(" - ")[0];
+                    document.getElementById('noticia').innerText = noticiaLimpa;
+                } else {
+                    document.getElementById('noticia').innerText = "Acompanhe as notícias de hoje no portal.";
+                }
+            } catch (e) { 
+                document.getElementById('noticia').innerText = "Atualizando boletim informativo...";
+            }
 
             i = (i + 1) % capitais.length;
         }
 
-        setInterval(updateWeather, 20000); // Troca a cada 20 segundos para dar tempo de ler
-        updateWeather();
+        setInterval(updatePage, 60000); // 60 segundos
+        updatePage();
     </script>
 </body>
 </html>
