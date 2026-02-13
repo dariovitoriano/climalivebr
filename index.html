@@ -2,97 +2,85 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Clima - Capitais do Brasil</title>
+    <title>Live Clima Capitais</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            background-color: #000; 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            color: white;
-            overflow: hidden;
-        }
+        body { margin: 0; background: #000; color: white; font-family: sans-serif; overflow: hidden; }
         #bg {
             position: fixed; width: 100%; height: 100%;
             background-size: cover; background-position: center;
-            z-index: -1; transition: background 1.5s ease-in-out;
-            filter: brightness(0.6);
+            z-index: -1; transition: background 2s ease-in-out;
+            filter: brightness(0.5);
         }
         .container {
-            position: absolute;
-            bottom: 60px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            max-width: 1000px;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
-            padding: 40px;
-            border-radius: 30px;
-            border: 2px solid rgba(255,255,255,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            position: absolute; bottom: 10%; left: 5%;
+            background: rgba(0,0,0,0.8); padding: 40px; border-radius: 25px;
+            border: 2px solid #ffce00; width: 400px;
         }
-        .cidade-box h1 { font-size: 50px; text-transform: uppercase; letter-spacing: 2px; }
-        .cidade-box p { font-size: 20px; color: #aaa; }
-        .clima-box { display: flex; align-items: center; text-align: right; }
-        .temp { font-size: 90px; font-weight: bold; margin-right: 20px; color: #ffce00; }
-        #icone { width: 120px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.5)); }
-        
-        /* Barra de Progresso para a próxima cidade */
-        .progress-bar {
-            position: absolute; bottom: 0; left: 0; height: 5px;
-            background: #ffce00; width: 0%; transition: width 10s linear;
-        }
+        h1 { font-size: 45px; margin: 0; color: #ffce00; }
+        .temp { font-size: 70px; font-weight: bold; }
+        #icone { width: 100px; vertical-align: middle; }
     </style>
 </head>
 <body>
 
     <div id="bg"></div>
-
     <div class="container">
-        <div class="cidade-box">
-            <h1 id="cidade">Brasília</h1>
-            <p id="regiao">Distrito Federal</p>
-        </div>
-        <div class="clima-box">
+        <h1 id="cidade">Carregando...</h1>
+        <div id="info">
             <span class="temp" id="temp">--°C</span>
-            <img id="icone" src="" alt="clima">
+            <img id="icone" src="" alt="">
         </div>
-        <div class="progress-bar" id="progress"></div>
+        <p id="regiao">Iniciando sistema...</p>
     </div>
 
     <script>
-        const API_KEY = '630c9e2bcd6b9a605058220d40683967'; // <--- INSIRA SUA CHAVE AQUI
+        const API_KEY = 'fbed7f01ff8461ca2d705889dcb039ae'; // <--- Verifique se não tem espaços!
         
-        // Estrutura de dados com todas as capitais brasileiras
         const capitais = [
-            {n: "Aracaju", s: "SE"}, {n: "Belém", s: "PA"}, {n: "Belo Horizonte", s: "MG"},
-            {n: "Boa Vista", s: "RR"}, {n: "Brasília", s: "DF"}, {n: "Cuiabá", s: "MT"},
-            {n: "Curitiba", s: "PR"}, {n: "Florianópolis", s: "SC"}, {n: "Fortaleza", s: "CE"},
-            {n: "Goiânia", s: "GO"}, {n: "João Pessoa", s: "PB"}, {n: "Macapá", s: "AP"},
-            {n: "Maceió", s: "AL"}, {n: "Manaus", s: "AM"}, {n: "Natal", s: "RN"},
-            {n: "Palmas", s: "TO"}, {n: "Porto Alegre", s: "RS"}, {n: "Porto Velho", s: "RO"},
-            {n: "Recife", s: "PE"}, {n: "Rio Branco", s: "AC"}, {n: "Rio de Janeiro", s: "RJ"},
-            {n: "Salvador", s: "BA"}, {n: "São Luís", s: "MA"}, {n: "São Paulo", s: "SP"},
-            {n: "Teresina", s: "PI"}, {n: "Vitória", s: "ES"}, {n: "Campo Grande", s: "MS"}
+            {n: "Rio Branco", s: "AC"}, {n: "Maceió", s: "AL"}, {n: "Macapá", s: "AP"},
+            {n: "Manaus", s: "AM"}, {n: "Salvador", s: "BA"}, {n: "Fortaleza", s: "CE"},
+            {n: "Brasília", s: "DF"}, {n: "Vitória", s: "ES"}, {n: "Goiânia", s: "GO"},
+            {n: "São Luís", s: "MA"}, {n: "Cuiabá", s: "MT"}, {n: "Campo Grande", s: "MS"},
+            {n: "Belo Horizonte", s: "MG"}, {n: "Belém", s: "PA"}, {n: "João Pessoa", s: "PB"},
+            {n: "Curitiba", s: "PR"}, {n: "Recife", s: "PE"}, {n: "Teresina", s: "PI"},
+            {n: "Rio de Janeiro", s: "RJ"}, {n: "Natal", s: "RN"}, {n: "Porto Alegre", s: "RS"},
+            {n: "Porto Velho", s: "RO"}, {n: "Boa Vista", s: "RR"}, {n: "Florianópolis", s: "SC"},
+            {n: "São Paulo", s: "SP"}, {n: "Aracaju", s: "SE"}, {n: "Palmas", s: "TO"}
         ];
 
-        let index = 0;
+        let i = 0;
 
-        async function getClima() {
-            const cap = capitais[index];
-            const url = `https://api.openweathermap.org/data/2.5/weather?q=${cap.n},BR&units=metric&lang=pt_br&appid=${API_KEY}`;
-            
-            // Reset barra de progresso
-            const pb = document.getElementById('progress');
-            pb.style.transition = 'none';
-            pb.style.width = '0%';
-            
+        async function update() {
+            const cap = capitais[i];
+            // Corrigido para garantir o carregamento da imagem de fundo
+            // Usando o buscador do Unsplash que ainda funciona via URL de imagem
+            const imgUrl = `https://images.unsplash.com/photo-1444723121867-7a241cacace9?auto=format&fit=crop&w=1200&q=80&sig=${i}`;
+            // Alternativa para fotos específicas de cidades (pode demorar a carregar):
+            // const imgUrl = `https://loremflickr.com/1920/1080/${cap.n},city/all`;
+
+            document.getElementById('bg').style.backgroundImage = `url('${imgUrl}')`;
+
             try {
-                const response = await fetch(url);
-                const data = await response.json();
+                const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${cap.n},BR&units=metric&lang=pt_br&appid=${API_KEY}`);
+                const data = await res.json();
 
-                // Atualiza Texto
-                document.getElementById('cidade').innerText = cap.n;
+                if(data.cod === 200) {
+                    document.getElementById('cidade').innerText = cap.n;
+                    document.getElementById('temp').innerText = Math.round(data.main.temp) + '°C';
+                    document.getElementById('regiao').innerText = `Capital de ${cap.s}`;
+                    document.getElementById('icone').src = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
+                } else {
+                    document.getElementById('regiao').innerText = "Erro na chave API";
+                }
+            } catch (e) {
+                console.log("Erro de conexão");
+            }
+
+            i = (i + 1) % capitais.length;
+        }
+
+        setInterval(update, 10000); // Troca a cada 10 segundos
+        update();
+    </script>
+</body>
+</html>
