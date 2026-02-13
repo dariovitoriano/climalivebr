@@ -2,63 +2,112 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Live Clima Capitais</title>
+    <title>Live Clima & Ofertas - 27 Capitais</title>
     <style>
-        body { margin: 0; background: #000; color: white; font-family: sans-serif; overflow: hidden; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #000; color: white; font-family: 'Segoe UI', Arial, sans-serif; overflow: hidden; }
+
+        /* LETREIRO DE OFERTAS */
+        .marquee-container {
+            position: fixed; top: 0; width: 100%; background: #ffce00;
+            color: #000; padding: 10px 0; font-weight: bold; font-size: 20px;
+            z-index: 100; border-bottom: 3px solid #f39c12;
+        }
+        .marquee-text {
+            display: inline-block; white-space: nowrap;
+            animation: marquee 20s linear infinite;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* FUNDO DINÂMICO */
         #bg {
             position: fixed; width: 100%; height: 100%;
             background-size: cover; background-position: center;
             z-index: -1; transition: background 2s ease-in-out;
-            filter: brightness(0.5);
+            filter: brightness(0.4);
         }
+
+        /* PAINEL DE INFORMAÇÕES */
         .container {
-            position: absolute; bottom: 10%; left: 5%;
-            background: rgba(0,0,0,0.8); padding: 40px; border-radius: 25px;
-            border: 2px solid #ffce00; width: 400px;
+            position: absolute; bottom: 50px; left: 50px;
+            background: rgba(0,0,0,0.8); padding: 40px; border-radius: 30px;
+            border-left: 10px solid #ffce00; min-width: 450px;
+            backdrop-filter: blur(10px);
         }
-        h1 { font-size: 45px; margin: 0; color: #ffce00; }
-        .temp { font-size: 70px; font-weight: bold; }
-        #icone { width: 100px; vertical-align: middle; }
+        h1 { font-size: 50px; margin-bottom: 5px; text-transform: uppercase; }
+        .estado { font-size: 22px; color: #ffce00; margin-bottom: 20px; display: block; }
+        .clima-row { display: flex; align-items: center; }
+        .temp { font-size: 100px; font-weight: bold; margin-right: 20px; }
+        #icone { width: 120px; }
     </style>
 </head>
 <body>
 
+    <div class="marquee-container">
+        <div class="marquee-text">
+            ⚡ OFERTAS AMAZON: Smartphone Samsung Galaxy S24 Ultra com desconto! &nbsp;&nbsp;&nbsp;&nbsp; 
+            🎧 Fone Bluetooth JBL em Promoção &nbsp;&nbsp;&nbsp;&nbsp; 
+            💻 Notebook Gamer Acer Nitro 5 &nbsp;&nbsp;&nbsp;&nbsp; 
+            🔥 ACESSE O LINK NA BIO E APROVEITE!
+        </div>
+    </div>
+
     <div id="bg"></div>
+
     <div class="container">
-        <h1 id="cidade">Carregando...</h1>
-        <div id="info">
+        <span id="regiao" class="estado">Iniciando...</span>
+        <h1 id="cidade">Brasília</h1>
+        <div class="clima-row">
             <span class="temp" id="temp">--°C</span>
             <img id="icone" src="" alt="">
         </div>
-        <p id="regiao">Iniciando sistema...</p>
     </div>
 
     <script>
-        const API_KEY = '630c9e2bcd6b9a605058220d40683967'; // <--- Verifique se não tem espaços!
-        
+        const API_KEY = '630c9e2bcd6b9a605058220d40683967'; 
+
+        // ESTRUTURA DE DADOS: 27 Capitais + Campo para sua Foto
+        // Basta substituir o link entre as aspas em 'foto' pelo link da sua preferência
         const capitais = [
-            {n: "Rio Branco", s: "AC"}, {n: "Maceió", s: "AL"}, {n: "Macapá", s: "AP"},
-            {n: "Manaus", s: "AM"}, {n: "Salvador", s: "BA"}, {n: "Fortaleza", s: "CE"},
-            {n: "Brasília", s: "DF"}, {n: "Vitória", s: "ES"}, {n: "Goiânia", s: "GO"},
-            {n: "São Luís", s: "MA"}, {n: "Cuiabá", s: "MT"}, {n: "Campo Grande", s: "MS"},
-            {n: "Belo Horizonte", s: "MG"}, {n: "Belém", s: "PA"}, {n: "João Pessoa", s: "PB"},
-            {n: "Curitiba", s: "PR"}, {n: "Recife", s: "PE"}, {n: "Teresina", s: "PI"},
-            {n: "Rio de Janeiro", s: "RJ"}, {n: "Natal", s: "RN"}, {n: "Porto Alegre", s: "RS"},
-            {n: "Porto Velho", s: "RO"}, {n: "Boa Vista", s: "RR"}, {n: "Florianópolis", s: "SC"},
-            {n: "São Paulo", s: "SP"}, {n: "Aracaju", s: "SE"}, {n: "Palmas", s: "TO"}
+            {n: "Rio Branco", s: "Acre", foto: "https://upload.wikimedia.org/wikipedia/commons/4/41/Centro_de_Cruzeiro_do_Sul-AC.jpg"},
+            {n: "Maceió", s: "Alagoas", foto: "https://upload.wikimedia.org/wikipedia/commons/2/2a/Macei%C3%B3_Alagoas_Brasil.jpg"},
+            {n: "Macapá", s: "Amapá", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Macap%C3%A1_%2830713231128%29.jpg/1280px-Macap%C3%A1_%2830713231128%29.jpg?20201125045728"},
+            {n: "Manaus", s: "Amazonas", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Manaus_amazonas.jpg/1280px-Manaus_amazonas.jpg?20220416184319"},
+            {n: "Salvador", s: "Bahia", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Salvador_BA_%28cropped%29_2.jpg/1280px-Salvador_BA_%28cropped%29_2.jpg?20230717221202"},
+            {n: "Fortaleza", s: "Ceará", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Fortaleza%2C_Brazil_%283%29.jpg/1280px-Fortaleza%2C_Brazil_%283%29.jpg?20140729071225"},
+            {n: "Brasília", s: "Distrito Federal", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Parque_da_Cidade_-_Brasilia_-_DF_-_panoramio.jpg/1280px-Parque_da_Cidade_-_Brasilia_-_DF_-_panoramio.jpg?20161217193304"},
+            {n: "Vitória", s: "Espírito Santo", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Vista_da_cidade_de_Vit%C3%B3ria_ES_a_partir_da_Pedra_dos_Dois_Olhos_3.jpg/1280px-Vista_da_cidade_de_Vit%C3%B3ria_ES_a_partir_da_Pedra_dos_Dois_Olhos_3.jpg?20220429220757"},
+            {n: "Goiânia", s: "Goiás", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Goiania_banner.jpg/1280px-Goiania_banner.jpg?20220306061719"},
+            {n: "São Luís", s: "Maranhão", foto: "https://upload.wikimedia.org/wikipedia/commons/e/e5/Puente_Don_Luis_I%2C_Oporto%2C_Portugal%2C_2012-05-09%2C_DD_13.JPG"},
+            {n: "Cuiabá", s: "Mato Grosso", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Cuiab%C3%A1_center.jpg/1280px-Cuiab%C3%A1_center.jpg?20220320130740"},
+            {n: "Campo Grande", s: "Mato Grosso do Sul", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Parque_das_Na%C3%A7%C3%B5es_Ind%C3%ADgenas_em_CG.jpg/1280px-Parque_das_Na%C3%A7%C3%B5es_Ind%C3%ADgenas_em_CG.jpg?20091126192156"},
+            {n: "Belo Horizonte", s: "Minas Gerais", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Belo_Horizonte%2C_Brasil.jpg/1280px-Belo_Horizonte%2C_Brasil.jpg?20180517052443"},
+            {n: "Belém", s: "Pará", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Bel%C3%A9m_Pra%C3%A7a_do_Rel%C3%B3gio_Clock_Place_01.jpg/1280px-Bel%C3%A9m_Pra%C3%A7a_do_Rel%C3%B3gio_Clock_Place_01.jpg?20091024093716"},
+            {n: "João Pessoa", s: "Paraíba", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Mana%C3%ADra_%E2%80%93_Jo%C3%A3o_Pessoa_%28PB%29.jpg/1280px-Mana%C3%ADra_%E2%80%93_Jo%C3%A3o_Pessoa_%28PB%29.jpg?20220728222755"},
+            {n: "Curitiba", s: "Paraná", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Cidade_de_Curitiba_by_Augusto_Janiscki_Junior.jpg/1280px-Cidade_de_Curitiba_by_Augusto_Janiscki_Junior.jpg?20120919120547"},
+            {n: "Recife", s: "Pernambuco", foto: "https://images.unsplash.com/photo-1597920780234-f86a596048d0?w=1200"},
+            {n: "Teresina", s: "Piauí", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Teresina_vista_de_cima_e_ao_fundo_a_Cidade_de_Timon_MA.jpg/1280px-Teresina_vista_de_cima_e_ao_fundo_a_Cidade_de_Timon_MA.jpg?20240814184008"},
+            {n: "Rio de Janeiro", s: "Rio de Janeiro", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Vista_a%C3%A9rea_Centro_do_Rio_de_Janeiro_RJ.jpg/1280px-Vista_a%C3%A9rea_Centro_do_Rio_de_Janeiro_RJ.jpg?20110628202643"},
+            {n: "Natal", s: "Rio Grande do Norte", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Fotos-A%C3%A9reas-Cidade-de-Natal.jpg/1280px-Fotos-A%C3%A9reas-Cidade-de-Natal.jpg?20210921021200"},
+            {n: "Porto Alegre", s: "Rio Grande do Sul", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Vistas_de_Porto_Alegre_%287410124084%29.jpg/1280px-Vistas_de_Porto_Alegre_%287410124084%29.jpg?20151126235720"},
+            {n: "Porto Velho", s: "Rondônia", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Porto_Velho%2C_Rond%C3%B4nia%2C_Brasil.jpg/1280px-Porto_Velho%2C_Rond%C3%B4nia%2C_Brasil.jpg?20200121234708"},
+            {n: "Boa Vista", s: "Roraima", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Boa_Vista_Roraima_Brazil.jpg/1280px-Boa_Vista_Roraima_Brazil.jpg?20250324183141"},
+            {n: "Florianópolis", s: "Santa Catarina", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Avenida_Beira_Mar_Norte_Florianopolis.jpg/1280px-Avenida_Beira_Mar_Norte_Florianopolis.jpg?20101230225426"},
+            {n: "São Paulo", s: "São Paulo", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Imagens_da_Cidade_de_S%C3%A3o_Paulo_e_Zool%C3%B3gico_da_Capital_Paulista._%2847480340391%29.jpg/1280px-Imagens_da_Cidade_de_S%C3%A3o_Paulo_e_Zool%C3%B3gico_da_Capital_Paulista._%2847480340391%29.jpg?20190327200427"},
+            {n: "Aracaju", s: "Sergipe", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Monumento_aos_150_anos_de_funda%C3%A7%C3%A3o_da_cidade_de_Aracaju_Sergipe_2022-6256.jpg/1280px-Monumento_aos_150_anos_de_funda%C3%A7%C3%A3o_da_cidade_de_Aracaju_Sergipe_2022-6256.jpg?20220904153448"},
+            {n: "Palmas", s: "Tocantins", foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Praia_de_Palmas_%2820330051450%29.jpg/1280px-Praia_de_Palmas_%2820330051450%29.jpg?20170430050545"}
         ];
 
         let i = 0;
 
-        async function update() {
+        async function updateWeather() {
             const cap = capitais[i];
-            // Corrigido para garantir o carregamento da imagem de fundo
-            // Usando o buscador do Unsplash que ainda funciona via URL de imagem
-            const imgUrl = `https://images.unsplash.com/photo-1444723121867-7a241cacace9?auto=format&fit=crop&w=1200&q=80&sig=${i}`;
-            // Alternativa para fotos específicas de cidades (pode demorar a carregar):
-            // const imgUrl = `https://loremflickr.com/1920/1080/${cap.n},city/all`;
-
-            document.getElementById('bg').style.backgroundImage = `url('${imgUrl}')`;
+            
+            // Troca a Foto de Fundo
+            document.getElementById('bg').style.backgroundImage = `url('${cap.foto}')`;
 
             try {
                 const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${cap.n},BR&units=metric&lang=pt_br&appid=${API_KEY}`);
@@ -66,22 +115,17 @@
 
                 if(data.cod === 200) {
                     document.getElementById('cidade').innerText = cap.n;
+                    document.getElementById('regiao').innerText = cap.s;
                     document.getElementById('temp').innerText = Math.round(data.main.temp) + '°C';
-                    document.getElementById('regiao').innerText = `Capital de ${cap.s}`;
-                    document.getElementById('icone').src = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
-                } else {
-                    document.getElementById('regiao').innerText = "Erro na chave API";
+                    document.getElementById('icone').src = `https://openweathermap.org/img/wn/${data.weather[0].icon}@4x.png`;
                 }
-            } catch (e) {
-                console.log("Erro de conexão");
-            }
+            } catch (e) { console.log("Erro na conexão"); }
 
             i = (i + 1) % capitais.length;
         }
 
-        setInterval(update, 10000); // Troca a cada 10 segundos
-        update();
+        setInterval(updateWeather, 20000); // Troca a cada 20 segundos para dar tempo de ler
+        updateWeather();
     </script>
 </body>
 </html>
-
