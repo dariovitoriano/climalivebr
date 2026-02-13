@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Clima - Capitais do Brasil</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background-color: #000; 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: white;
+            overflow: hidden;
+        }
+        #bg {
+            position: fixed; width: 100%; height: 100%;
+            background-size: cover; background-position: center;
+            z-index: -1; transition: background 1.5s ease-in-out;
+            filter: brightness(0.6);
+        }
+        .container {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 1000px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 30px;
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .cidade-box h1 { font-size: 50px; text-transform: uppercase; letter-spacing: 2px; }
+        .cidade-box p { font-size: 20px; color: #aaa; }
+        .clima-box { display: flex; align-items: center; text-align: right; }
+        .temp { font-size: 90px; font-weight: bold; margin-right: 20px; color: #ffce00; }
+        #icone { width: 120px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.5)); }
+        
+        /* Barra de Progresso para a próxima cidade */
+        .progress-bar {
+            position: absolute; bottom: 0; left: 0; height: 5px;
+            background: #ffce00; width: 0%; transition: width 10s linear;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="bg"></div>
+
+    <div class="container">
+        <div class="cidade-box">
+            <h1 id="cidade">Brasília</h1>
+            <p id="regiao">Distrito Federal</p>
+        </div>
+        <div class="clima-box">
+            <span class="temp" id="temp">--°C</span>
+            <img id="icone" src="" alt="clima">
+        </div>
+        <div class="progress-bar" id="progress"></div>
+    </div>
+
+    <script>
+        const API_KEY = '630c9e2bcd6b9a605058220d40683967'; // <--- INSIRA SUA CHAVE AQUI
+        
+        // Estrutura de dados com todas as capitais brasileiras
+        const capitais = [
+            {n: "Aracaju", s: "SE"}, {n: "Belém", s: "PA"}, {n: "Belo Horizonte", s: "MG"},
+            {n: "Boa Vista", s: "RR"}, {n: "Brasília", s: "DF"}, {n: "Cuiabá", s: "MT"},
+            {n: "Curitiba", s: "PR"}, {n: "Florianópolis", s: "SC"}, {n: "Fortaleza", s: "CE"},
+            {n: "Goiânia", s: "GO"}, {n: "João Pessoa", s: "PB"}, {n: "Macapá", s: "AP"},
+            {n: "Maceió", s: "AL"}, {n: "Manaus", s: "AM"}, {n: "Natal", s: "RN"},
+            {n: "Palmas", s: "TO"}, {n: "Porto Alegre", s: "RS"}, {n: "Porto Velho", s: "RO"},
+            {n: "Recife", s: "PE"}, {n: "Rio Branco", s: "AC"}, {n: "Rio de Janeiro", s: "RJ"},
+            {n: "Salvador", s: "BA"}, {n: "São Luís", s: "MA"}, {n: "São Paulo", s: "SP"},
+            {n: "Teresina", s: "PI"}, {n: "Vitória", s: "ES"}, {n: "Campo Grande", s: "MS"}
+        ];
+
+        let index = 0;
+
+        async function getClima() {
+            const cap = capitais[index];
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=${cap.n},BR&units=metric&lang=pt_br&appid=${API_KEY}`;
+            
+            // Reset barra de progresso
+            const pb = document.getElementById('progress');
+            pb.style.transition = 'none';
+            pb.style.width = '0%';
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                // Atualiza Texto
+                document.getElementById('cidade').innerText = cap.n;
