@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Live Capitais - Clima & Câmeras</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #000; color: white; font-family: 'Segoe UI', Arial, sans-serif; overflow: hidden; }
+
+        /* FUNDO E VÍDEO */
+        #bg, #camera-container {
+            position: fixed; width: 100%; height: 100%;
+            z-index: -1; transition: opacity 1.5s ease;
+        }
+        #bg { background-size: cover; background-position: center; filter: brightness(0.4); }
+        
+        iframe { width: 100%; height: 100%; border: none; pointer-events: none; }
+
+        /* PAINÉIS */
+        .ui-overlay {
+            position: absolute; bottom: 50px; left: 50px; right: 50px;
+            transition: opacity 1s ease, transform 1s ease;
+        }
+        .clima-panel {
+            background: rgba(0,0,0,0.85); padding: 30px;
+            border-radius: 20px 20px 0 0; border-left: 10px solid #ffce00;
+            display: flex; justify-content: space-between; align-items: center;
+            backdrop-filter: blur(10px);
+        }
+        .news-panel {
+            background: rgba(255, 206, 0, 0.95); color: #000;
+            padding: 20px; border-radius: 0 0 20px 20px;
+            font-size: 24px; font-weight: bold;
+        }
+
+        /* ESTADOS DE TRANSIÇÃO */
+        .hidden { opacity: 0; transform: translateY(20px); }
+        .camera-active #bg { opacity: 0; }
+        .camera-active .ui-overlay { opacity: 0; }
+
+        .temp { font-size: 80px; font-weight: bold; color: #ffce00; }
+        #progress { position: fixed; bottom: 0; left: 0; height: 6px; background: #ffce00; width: 0%; }
+    </style>
+</head>
+<body>
+
+    <div id="bg"></div>
+    <div id="camera-container" style="opacity: 0;"></div>
+
+    <div class="ui-overlay" id="interface">
+        <div class="clima-panel">
+            <div>
+                <p id="estado" style="color:#ffce00; font-size: 18px;"></p>
+                <h1 id="cidade" style="font-size: 45px;">Carregando...</h1>
+            </div>
+            <div style="display:flex; align-items:center;">
+                <span class="temp" id="temp">--°C</span>
+                <img id="icone" src="" width="100">
+            </div>
+        </div>
+        <div class="news-panel">
+            <span id="noticia">Buscando informações...</span>
+        </div>
+    </div>
+
+    <div id="progress"></div>
+
+    <script>
+        const API_KEY = '630c9e2bcd6b9a605058220d40683967';
+        
+        // ESTRUTURA: Adicione o link embed da câmera de cada capital
+        const capitais = [
+            {n: "Natal", s: "RN", cam: "https://video02.logicahost.com.br/wensky5/wensky5/playlist.m3u8", foto: "URL_DA_FOTO_AQUI"},
+            {n: "São Paulo", s: "SP", cam: "https://video02.logicahost.com.br/reserva/reserva/playlist.m3u8", foto: "URL_DA_FOTO_AQUI"},
+            // ... adicione as outras conforme sua lista
+        ];
+
+        let i = 0;
+        let mostrandoCamera = false;
+
+        async function alternarCiclo() {
+            const cap = capitais[i];
+            const interface = document.getElementById('interface');
+            const cameraCont = document.getElementById('camera-container');
+            const progress = document.getElementById('progress');
+
+            // Reinicia barra de progresso (30s)
+            progress.style.transition = 'none';
+            progress.style.width = '0%';
+            setTimeout(() => { progress.style.transition = 'width 30s linear'; progress.style.width = '100%'; }, 100);
+
+            if (!mostrandoCamera) {
+                // ESTADO 1: MOSTRAR DADOS
+                cameraCont.style.opacity = "0";
+                interface.classList.remove('hidden');
+                document.getElementById('bg').style.backgroundImage = `url('${cap.foto}')`;
+                
+                await carregarDados(cap);
+                mostrandoCamera = true;
+            } else {
+                // ESTADO 2: MOSTRAR CÂMERA AO VIVO
+                interface.classList.add('hidden');
+                cameraCont.innerHTML = `<iframe src="${cap.cam}?autoplay=1&mute=1"></iframe>`;
+                cameraCont.style.opacity = "1";
+                
+                mostrandoCamera = false;
+                i = (i + 1) % capitais.length; // Só pula para a próxima capital após a câmera
+            }
+        }
+
+        async function carregarDados(cap) {
+            try {
+                // Clima
+                const resC = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${cap.n},BR&units=metric&lang=pt_br&appid=${API_KEY}`);
+                const dataC = await resC.json();
+                document.getElementById('cidade').innerText = cap.n;
+                document.getElementById('estado').innerText = cap.s;
+                document.getElementById('temp').innerText = Math.round(dataC.main.temp) + '°C';
+                document.getElementById('icone').src = `https://openweathermap.org/img/wn/${dataC.weather[0].icon}@2x.png`;
+
+                // Notícias (via RSS2JSON)
+                const rss = `https://news.google.com/rss/search?q=noticias+${cap.n}&hl=pt-BR&gl=BR&ceid=BR:pt-419`;
+                const resN = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rss)}`);
+                const dataN = await resN.json();
+                document.getElementById('noticia').innerText = dataN.items[0].title.split(" - ")[0];
+            } catch (e) { console.log("Erro ao carregar"); }
+        }
+
+        setInterval(alternarCiclo, 30000); // 30 segundos de troca
+        alternarCiclo();
+    </script>
+</body>
+</html>
