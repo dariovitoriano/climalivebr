@@ -107,7 +107,7 @@
         
         // ESTRUTURA DE DADOS: 27 Capitais
         const capitais = [
-            {n: "Natal", s: "Rio Grande do Norte", cam: "https://www.youtube.com/embed/LnnGK8eY37Y?si=eENSYynMxokcI_6o", foto: "https://images.unsplash.com/photo-1601362840469-51e4d8d39785?w=1200"},
+            {n: "Natal", s: "Rio Grande do Norte", cam: "https://www.youtube.com/embed/LnnGK8eY37Y", foto: "https://images.unsplash.com/photo-1601362840469-51e4d8d39785?w=1200"},
             ];
 
         let i = 0;
@@ -146,7 +146,7 @@
                     if (cap.cam.includes("youtube.com")) {
                         video.style.display = "none";
                         yt.style.display = "block";
-                        yt.src = cap.cam + "?autoplay=1&mute=1&controls=0&modestbranding=1";
+                        yt.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&enablejsapi=1&playlist=${videoId}&loop=1`;
                     } else {
                         yt.style.display = "none";
                         video.style.display = "block";
@@ -189,3 +189,4 @@
     </script>
 </body>
 </html>
+
