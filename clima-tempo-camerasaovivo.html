@@ -103,12 +103,17 @@
     <div id="progress-container"><div id="progress-bar"></div></div>
 
     <script>
-        const API_KEY = '630c9e2bcd6b9a605058220d40683967'; // <--- INSIRA SUA CHAVE DA OPENWEATHER AQUI
+        const API_KEY = '630c9e2bcd6b9a605058220d40683967'; 
         
-        // ESTRUTURA DE DADOS: 27 Capitais
+        // ESTRUTURA DE DADOS ATUALIZADA
         const capitais = [
-            {n: "Natal", s: "Rio Grande do Norte", cam: "https://video02.logicahost.com.br/reserva/reserva/playlist.m3u8", foto: "https://images.unsplash.com/photo-1601362840469-51e4d8d39785?w=1200"},
-            ];
+            {
+                n: "Natal", 
+                s: "Rio Grande do Norte", 
+                cam: "https://www.youtube.com/embed/Er0XPlc_b20", // Link de Embed corrigido
+                foto: "https://images.unsplash.com/photo-1601362840469-51e4d8d39785?w=1200"
+            }
+        ];
 
         let i = 0;
         let mostrandoCamera = false;
@@ -131,7 +136,7 @@
                 // --- ESTADO 1: MOSTRAR PAINEL DE DADOS ---
                 cameraCont.style.opacity = "0";
                 video.pause();
-                yt.src = ""; // Para o YouTube
+                yt.src = ""; 
                 interface.classList.remove('hidden');
                 bg.style.backgroundImage = `url('${cap.foto}')`;
                 
@@ -146,7 +151,8 @@
                     if (cap.cam.includes("youtube.com")) {
                         video.style.display = "none";
                         yt.style.display = "block";
-                        yt.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&enablejsapi=1&playlist=${videoId}&loop=1`;
+                        // Adicionado parâmetros para autoplay e mute automático
+                        yt.src = `${cap.cam}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&showinfo=0&enablejsapi=1`;
                     } else {
                         yt.style.display = "none";
                         video.style.display = "block";
@@ -184,10 +190,8 @@
             } catch (e) { console.log("Erro na carga de dados"); }
         }
 
-        setInterval(alternarCiclo, 10000);
+        setInterval(alternarCiclo, 30000);
         alternarCiclo();
     </script>
 </body>
 </html>
-
-
