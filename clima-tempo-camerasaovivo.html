@@ -3,13 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live 24/7 - Clima, Notícias e Câmeras</title>
+    <title>Live 24/7 - Clima, Notícias e Screenshot</title>
     
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #000; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; }
+
+        /* RELÓGIO EM TEMPO REAL */
+        #relogio {
+            position: fixed; top: 70px; right: 50px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 25px; border-radius: 15px;
+            font-size: 48px; font-weight: bold; color: #ffce00;
+            z-index: 110; border: 2px solid #ffce00;
+            font-variant-numeric: tabular-nums;
+        }
 
         /* MARQUEE / LETREIRO */
         .marquee-container {
@@ -26,18 +34,18 @@
             100% { transform: translateX(-100%); }
         }
 
-        /* FUNDO E CONTAINERS DE VÍDEO */
+        /* FUNDO E CONTAINERS */
         #bg, #camera-container {
             position: fixed; width: 100%; height: 100%;
             z-index: -1; transition: opacity 1.5s ease;
         }
         #bg { background-size: cover; background-position: center; filter: brightness(0.3); }
         
-        #video-player, #youtube-player {
-            width: 100%; height: 100%; border: none;
+        /* IMAGEM QUE SUBSTITUI A LIVE */
+        #live-screenshot {
+            width: 100%; height: 100%; object-fit: cover;
+            display: none;
         }
-        #video-player { object-fit: cover; display: none; }
-        #youtube-player { display: none; pointer-events: none; }
 
         /* INTERFACE (DADOS) */
         .ui-overlay {
@@ -69,6 +77,8 @@
 </head>
 <body>
 
+    <div id="relogio">00:00:00</div>
+
     <div class="marquee-container">
         <div class="marquee-text">
             ⚡ OFERTAS AMAZON: Eletrônicos com até 40% OFF! Confira o link na bio. &nbsp;&nbsp;&nbsp;&nbsp; 
@@ -80,8 +90,7 @@
     <div id="bg"></div>
 
     <div id="camera-container" style="opacity: 0;">
-        <video id="video-player" autoplay muted playsinline></video>
-        <iframe id="youtube-player" allow="autoplay; encrypted-media"></iframe>
+        <img id="live-screenshot" src="" alt="Screenshot da Live">
     </div>
 
     <div class="ui-overlay" id="interface">
@@ -104,65 +113,58 @@
 
     <script>
         const API_KEY = '630c9e2bcd6b9a605058220d40683967'; 
+        const LIVE_ID = 'Er0XPlc_b20'; // ID da sua Live
         
-        // ESTRUTURA DE DADOS ATUALIZADA
         const capitais = [
             {
                 n: "Natal", 
                 s: "Rio Grande do Norte", 
-                cam: "https://www.youtube.com/embed/Er0XPlc_b20", // Link de Embed corrigido
                 foto: "https://images.unsplash.com/photo-1601362840469-51e4d8d39785?w=1200"
             }
         ];
 
         let i = 0;
         let mostrandoCamera = false;
-        const video = document.getElementById('video-player');
-        const yt = document.getElementById('youtube-player');
-        const hls = new Hls();
+        const interface = document.getElementById('interface');
+        const cameraCont = document.getElementById('camera-container');
+        const imgLive = document.getElementById('live-screenshot');
+        const bg = document.getElementById('bg');
+
+        // ATUALIZAÇÃO DO RELÓGIO (Brasília)
+        function atualizarRelogio() {
+            const agora = new Date();
+            const opcoes = { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+            document.getElementById('relogio').innerText = agora.toLocaleTimeString('pt-BR', opcoes);
+        }
+        setInterval(atualizarRelogio, 1000);
+        atualizarRelogio();
 
         async function alternarCiclo() {
             const cap = capitais[i];
-            const interface = document.getElementById('interface');
-            const cameraCont = document.getElementById('camera-container');
-            const bg = document.getElementById('bg');
             const pBar = document.getElementById('progress-bar');
 
-            // Reset Barra de Progresso (30s)
             pBar.style.transition = 'none'; pBar.style.width = '0%';
             setTimeout(() => { pBar.style.transition = 'width 30s linear'; pBar.style.width = '100%'; }, 100);
 
             if (!mostrandoCamera) {
-                // --- ESTADO 1: MOSTRAR PAINEL DE DADOS ---
+                // ESTADO 1: MOSTRAR PAINEL DE DADOS
                 cameraCont.style.opacity = "0";
-                video.pause();
-                yt.src = ""; 
+                imgLive.style.display = "none";
                 interface.classList.remove('hidden');
                 bg.style.backgroundImage = `url('${cap.foto}')`;
                 
                 await carregarDados(cap);
                 mostrandoCamera = true;
             } else {
-                // --- ESTADO 2: MOSTRAR CÂMERA AO VIVO ---
-                if (cap.cam !== "") {
-                    interface.classList.add('hidden');
-                    cameraCont.style.opacity = "1";
-                    
-                    if (cap.cam.includes("youtube.com")) {
-                        video.style.display = "none";
-                        yt.style.display = "block";
-                        // Adicionado parâmetros para autoplay e mute automático
-                        yt.src = `${cap.cam}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&showinfo=0&enablejsapi=1`;
-                    } else {
-                        yt.style.display = "none";
-                        video.style.display = "block";
-                        if (Hls.isSupported()) {
-                            hls.loadSource(cap.cam);
-                            hls.attachMedia(video);
-                            hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
-                        }
-                    }
-                }
+                // ESTADO 2: MOSTRAR SCREENSHOT DA LIVE (SEM ANÚNCIOS)
+                interface.classList.add('hidden');
+                cameraCont.style.opacity = "1";
+                imgLive.style.display = "block";
+                
+                // Pega a thumb da live em alta qualidade como "screenshot"
+                // hqdefault garante uma imagem nítida sem carregar o player de vídeo
+                imgLive.src = `https://img.youtube.com/vi/${LIVE_ID}/maxresdefault.jpg?t=${new Date().getTime()}`;
+                
                 mostrandoCamera = false;
                 i = (i + 1) % capitais.length;
             }
@@ -170,7 +172,6 @@
 
         async function carregarDados(cap) {
             try {
-                // Clima
                 const resC = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${cap.n},BR&units=metric&lang=pt_br&appid=${API_KEY}`);
                 const dataC = await resC.json();
                 if(dataC.cod === 200) {
@@ -180,7 +181,6 @@
                     document.getElementById('icone').src = `https://openweathermap.org/img/wn/${dataC.weather[0].icon}@4x.png`;
                 }
 
-                // Notícias
                 const rss = `https://news.google.com/rss/search?q=noticias+${cap.n}&hl=pt-BR&gl=BR&ceid=BR:pt-419`;
                 const resN = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rss)}`);
                 const dataN = await resN.json();
